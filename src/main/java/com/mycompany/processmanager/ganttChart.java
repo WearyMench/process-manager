@@ -4,6 +4,7 @@
  */
 package com.mycompany.processmanager;
 
+import java.text.SimpleDateFormat;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -15,6 +16,10 @@ import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
 
 import java.util.*;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.DateTickUnit;
+import org.jfree.chart.axis.DateTickUnitType;
+import org.jfree.data.gantt.Task;
 
 /**
  *
@@ -33,19 +38,17 @@ public class ganttChart extends ApplicationFrame {
         setContentPane(chartPanel);
     }
 
-    private List<org.jfree.data.gantt.Task> generateTasks(List<MenuManager.Process> processes) {
-
-        List<org.jfree.data.gantt.Task> tasks = new ArrayList<>();
-        int currentTime = 0;
+    private List<Task> generateTasks(List<MenuManager.Process> processes) {
+        List<Task> tasks = new ArrayList<>();
+        long currentTime = 0;
         for (MenuManager.Process p : processes) {
-            int taskStartTime = Math.max(currentTime, p.arrivalTime);
-            tasks.add(new org.jfree.data.gantt.Task(
+            long taskStartTime = Math.max(currentTime, p.arrivalTime * 1000L); // convert to milliseconds
+            tasks.add(new Task(
                     p.name,
-                    new SimpleTimePeriod(taskStartTime, taskStartTime + p.burstTime)
+                    new SimpleTimePeriod(taskStartTime, taskStartTime + p.burstTime * 1000L) // convert to milliseconds
             ));
-            currentTime = taskStartTime + p.burstTime;
+            currentTime = taskStartTime + p.burstTime * 1000L; // convert to milliseconds
         }
-
         return tasks;
     }
 
@@ -60,15 +63,20 @@ public class ganttChart extends ApplicationFrame {
     }
 
     private JFreeChart createChart(IntervalCategoryDataset dataset) {
-        return ChartFactory.createGanttChart(
+        JFreeChart chart = ChartFactory.createGanttChart(
                 "Gantt Chart",
                 "Processes",
-                "Time",
+                "Time (seconds)",
                 dataset,
                 true,
                 true,
                 false
         );
-    }
 
+        // Configura el formato del eje de tiempo
+        DateAxis dateAxis = (DateAxis) chart.getCategoryPlot().getRangeAxis();
+        dateAxis.setDateFormatOverride(new SimpleDateFormat("ss"));
+        dateAxis.setTickUnit(new DateTickUnit(DateTickUnitType.SECOND, 1));
+        return chart;
+    }
 }
