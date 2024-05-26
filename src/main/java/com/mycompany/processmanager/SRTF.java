@@ -24,6 +24,13 @@ public class SRTF implements Algoritmo {
             remainingBurstTimes[i] = processes.get(i).burstTime;
         }
 
+        // Imprimir encabezado del diagrama de Gantt
+        System.out.print("Tiempo ");
+        for (MenuManager.Process process : processes) {
+            System.out.print("| P" + process.name + " ");
+        }
+        System.out.println("|");
+
         while (!remainingProcesses.isEmpty()) {
             MenuManager.Process shortestJob = null;
             int shortestTime = Integer.MAX_VALUE;
@@ -37,6 +44,11 @@ public class SRTF implements Algoritmo {
 
             if (shortestJob == null) {
                 // Avanzar al siguiente tiempo de llegada
+                System.out.print(" " + currentTime + "    ");
+                for (MenuManager.Process process : processes) {
+                    System.out.print("|    ");
+                }
+                System.out.println("|");
                 currentTime++;
             } else {
                 // Ejecutar el proceso por una unidad de tiempo
@@ -53,6 +65,17 @@ public class SRTF implements Algoritmo {
                     executedProcesses.add(shortestJob);
                     remainingProcesses.remove(shortestJob);
                 }
+
+                // Imprimir la ejecución actual en el diagrama de Gantt
+                System.out.print(" " + currentTime + "    ");
+                for (MenuManager.Process process : processes) {
+                    if (process == shortestJob) {
+                        System.out.print("|### ");
+                    } else {
+                        System.out.print("|    ");
+                    }
+                }
+                System.out.println("|");
 
                 // Incrementar el tiempo actual
                 currentTime++;
