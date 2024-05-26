@@ -21,7 +21,7 @@ public class FCFS implements Algoritmo {
      * @param processes
      */
     @Override
-    public void ejecutar(List<MenuManager.Process> processes, List<MenuManager.ProcessInfo> processInfoList) {
+    public void ejecutar(List<MenuManager.Process> processes) {
         System.out.println("Ejecutar algortimo FCFS");
         int tiempoTotal = 0;
         int tiempoEsperaTotal = 0;
@@ -29,17 +29,18 @@ public class FCFS implements Algoritmo {
         Collections.sort(processes, Comparator.comparingInt(p -> p.arrivalTime));
         
         for (MenuManager.Process proceso : processes) {
-            System.out.println("Proceso " + proceso.name + " ejecutandose...");
             // Calcular el tiempo de espera para este proceso
             int tiempoEspera = Math.max(0, tiempoTotal - proceso.arrivalTime);
             // Sumar el tiempo de espera total
             tiempoEsperaTotal += tiempoEspera;
             // Calcular el tiempo de respuesta para este proceso
             int tiempoRespuesta = tiempoEspera + proceso.burstTime;
+            
+            proceso.waitTime = tiempoEspera;
+            proceso.responseTime = tiempoRespuesta;
+            
             // Actualizar el tiempo total
             tiempoTotal += proceso.burstTime;
-
-            processInfoList.add(new MenuManager.ProcessInfo(proceso.name, tiempoEspera, tiempoRespuesta));
 
         }
     }

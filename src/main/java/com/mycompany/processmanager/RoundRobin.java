@@ -6,7 +6,10 @@ package com.mycompany.processmanager;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 /**
@@ -15,38 +18,72 @@ import java.util.Queue;
  */
 public class RoundRobin implements Algoritmo {
 
-    public void ejecutar(List<MenuManager.Process> processes, List<MenuManager.ProcessInfo> processInfoList) {
-        System.out.println("Ejecutar algortimo Quantum");
-
-        Queue<MenuManager.Process> readyQueue = new ArrayDeque<>(processes);
-        List<MenuManager.ProcessInfo> executionOrder = new ArrayList<>();
+    @Override
+    public void ejecutar(List<MenuManager.Process> processes) {
+        // Variables esenciales
         int currentTime = 0;
+        int quantum = processes.get(0).quantum;
+        Queue<MenuManager.Process> queue = new LinkedList<>();
+        Map<MenuManager.Process, Integer> waitingTimeMap = new HashMap<>();
+        Map<MenuManager.Process, Integer> firstExecutionTimeMap = new HashMap<>(); // Mapa para almacenar el tiempo de primera ejecución de cada proceso
+        Map<MenuManager.Process, Integer> responseTimeMap = new HashMap<>();
 
-        while (!readyQueue.isEmpty()) {
-            MenuManager.Process currentProcess = readyQueue.poll();
-
-            // Calcular el tiempo de espera para este proceso (si lo hubiera)
-            int waitTime = Math.max(0, currentTime - currentProcess.arrivalTime);
-            // Calcular el tiempo de respuesta para este proceso
-            int responseTime = waitTime + currentProcess.burstTime;
-
-            // Ejecutar el proceso durante el quantum o hasta que termine su ráfaga, lo que ocurra primero
-            int remainingTime = Math.min(currentProcess.burstTime, currentProcess.quantum);
-            currentTime += remainingTime;
-
-            // Reducir el tiempo restante de ráfaga del proceso
-            currentProcess.burstTime -= remainingTime;
-
-            // Si el proceso aún tiene ráfaga pendiente, vuelve a agregarlo a la cola de listos
-            if (currentProcess.burstTime > 0) {
-                readyQueue.offer(currentProcess);
-            }
-
-            // Añadir el proceso a la lista de ejecución
-            executionOrder.add(new MenuManager.ProcessInfo(currentProcess.name, waitTime, responseTime));
+        // Inicializar el mapa con tiempo de espera 0 para cada proceso
+        for (MenuManager.Process process : processes) {
+            waitingTimeMap.put(process, 0);
+            firstExecutionTimeMap.put(process, -1);
+            responseTimeMap.put(process, 0);
         }
 
-        // Copiar la lista de ejecución a processInfoList
-        processInfoList.addAll(executionOrder);
+        queue.addAll(processes);
+
+        //Header del grafico a mostrar en consola.
+        System.out.println("Time\tProcess");
+
+        // Algoritmo Round Robin
+        while (!queue.isEmpty()) {
+            MenuManager.Process currentProcess = queue.poll();
+            System.out.print(currentTime + "\t" + currentProcess.name + "\t");
+
+            if (firstExecutionTimeMap.get(currentProcess) == -1) {
+                firstExecutionTimeMap.put(currentProcess, currentTime);
+            }
+
+            if (currentProcess.remainingTime > quantum) {
+                for (int i = 0; i < quantum; i++) {
+                    System.out.print("*");
+                }
+                currentTime += quantum;
+                currentProcess.remainingTime -= quantum;
+                queue.add(currentProcess);
+            } else {
+                for (int i = 0; i < currentProcess.remainingTime; i++) {
+                    System.out.print("*");
+                }
+                currentTime += currentProcess.remainingTime;
+                currentProcess.remainingTime = 0;
+
+                // Calcular tiempo de espera
+                int waitingTime = currentTime - currentProcess.arrivalTime - currentProcess.burstTime;
+                waitingTimeMap.put(currentProcess, waitingTime);
+
+                // Actualizar tiempo de respuesta
+                int firstExecutionTime = firstExecutionTimeMap.get(currentProcess);
+                int responseTime = currentTime - firstExecutionTime;
+                responseTimeMap.put(currentProcess, responseTime);
+            }
+            System.out.println();
+        }
+
+        // Actualizar los tiempos de espera y respuesta en la lista de procesos
+        for (MenuManager.Process process : processes) {
+            process.waitTime = waitingTimeMap.get(process);
+            process.responseTime = responseTimeMap.get(process);
+        }
+
+        // Devolver la lista modificada
+        /*for (MenuManager.Process process : completedProcesses) {
+            processes.add(process);
+        }*/
     }
 }

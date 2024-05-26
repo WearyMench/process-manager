@@ -15,13 +15,14 @@ import java.util.stream.Collectors;
  */
 public class SJF implements Algoritmo {
 
-    public void ejecutar(List<MenuManager.Process> processes, List<MenuManager.ProcessInfo> processInfoList) {
+    public void ejecutar(List<MenuManager.Process> processes) {
         System.out.println("Ejecutar algoritmo SJF");
         List<MenuManager.Process> remainingProcesses = new ArrayList<>(processes);
-        List<MenuManager.ProcessInfo> executionOrder = new ArrayList<>();
+        List<MenuManager.Process> executedProcesses = new ArrayList<>();
         int currentTime = 0;
 
         while (!remainingProcesses.isEmpty()) {
+            // Encuentra el proceso con el menor burst time entre los procesos que han llegado hasta currentTime
             MenuManager.Process shortestJob = null;
             for (MenuManager.Process process : remainingProcesses) {
                 if (process.arrivalTime <= currentTime && (shortestJob == null || process.burstTime < shortestJob.burstTime)) {
@@ -30,7 +31,7 @@ public class SJF implements Algoritmo {
             }
 
             if (shortestJob == null) {
-                // Avanzar el tiempo si no hay procesos llegados
+                // Si no hay procesos que hayan llegado aún, avanza el tiempo
                 currentTime++;
                 continue;
             }
@@ -40,14 +41,22 @@ public class SJF implements Algoritmo {
             // Calcula el tiempo de respuesta para este proceso
             int responseTime = waitTime + shortestJob.burstTime;
 
-            // Añadir el proceso a la lista de ejecución
-            executionOrder.add(new MenuManager.ProcessInfo(shortestJob.name, waitTime, responseTime));
-            // Actualizar el tiempo actual
+            // Actualiza los tiempos de espera y respuesta del proceso
+            shortestJob.waitTime = waitTime;
+            shortestJob.responseTime = responseTime;
+
+            // Actualiza el tiempo actual
             currentTime += shortestJob.burstTime;
-            // Eliminar el proceso de la lista de procesos restantes
+
+            // Añade el proceso a la lista de procesos ejecutados
+            executedProcesses.add(shortestJob);
+
+            // Elimina el proceso de la lista de procesos restantes
             remainingProcesses.remove(shortestJob);
         }
-        // Copiar la lista de ejecución a processInfoList
-        processInfoList.addAll(executionOrder);
+
+        // Reorganiza la lista original de procesos según el orden de ejecución
+        processes.clear();
+        processes.addAll(executedProcesses);
     }
 }

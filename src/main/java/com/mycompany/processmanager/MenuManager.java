@@ -4,7 +4,8 @@
  */
 package com.mycompany.processmanager;
 
-import java.awt.Toolkit;import java.util.ArrayList;
+import java.awt.Toolkit;
+import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JTextField;
@@ -19,8 +20,6 @@ import org.jfree.ui.RefineryUtilities;
 public class MenuManager extends javax.swing.JFrame {
 
     List<Process> processes = new ArrayList<>();
-    List<ProcessInfo> processInfoList = new ArrayList<>();
-    
 
     public static class Process {
 
@@ -29,26 +28,19 @@ public class MenuManager extends javax.swing.JFrame {
         int burstTime;
         int priority;
         int quantum;
+        int waitTime;
+        int responseTime;
+        int remainingTime;
 
-        public Process(String name, int arrivalTime, int burstTime, int priority, int quantum) {
+        public Process(String name, int arrivalTime, int burstTime, int priority, int quantum, int waitTime, int responseTime) {
             this.name = name;
             this.arrivalTime = arrivalTime;
             this.burstTime = burstTime;
             this.priority = priority;
             this.quantum = quantum;
-        }
-    }
-
-    public static class ProcessInfo {
-
-        String name;
-        int waitTime;
-        int responseTime;
-
-        public ProcessInfo(String name, int waitTime, int responseTime) {
-            this.name = name;
             this.waitTime = waitTime;
             this.responseTime = responseTime;
+            this.remainingTime = burstTime;
         }
     }
 
@@ -122,6 +114,11 @@ public class MenuManager extends javax.swing.JFrame {
         jLabel2.setText("Seleccione uno de los algoritmos de la lista:");
 
         jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "1. FCFS (First to come, first to serve)", "2. SJF (Shortest Job First)", "3. SRTF (Short Remaining Time First)", "4. Priority Schedule (Asignacion de prioridades)", "5. Quantum/Round Robin (Turno circular)" }));
+        jComboBox1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBox1ActionPerformed(evt);
+            }
+        });
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -325,53 +322,50 @@ public class MenuManager extends javax.swing.JFrame {
         int index = jComboBox1.getSelectedIndex();
         switch (index) {
             case 0:
-                processInfoList.clear();
                 DefaultTableModel model2 = (DefaultTableModel) jTable2.getModel();
                 model2.setRowCount(0);
-                new FCFS().ejecutar(processes, processInfoList);
-                insertarDatosEnTabla(processInfoList);
+                new FCFS().ejecutar(processes);
+                insertarDatosEnTabla(processes);
                 break;
             case 1:
-                processInfoList.clear();
                 DefaultTableModel model21 = (DefaultTableModel) jTable2.getModel();
                 model21.setRowCount(0);
-                new SJF().ejecutar(processes, processInfoList);
-                insertarDatosEnTabla(processInfoList);
+                new SJF().ejecutar(processes);
+                insertarDatosEnTabla(processes);
                 break;
             case 2:
-                processInfoList.clear();
                 DefaultTableModel model22 = (DefaultTableModel) jTable2.getModel();
                 model22.setRowCount(0);
-                new SRTF().ejecutar(processes, processInfoList);
-                insertarDatosEnTabla(processInfoList);
+                new SRTF().ejecutar(processes);
+                insertarDatosEnTabla(processes);
                 break;
             case 3:
-                processInfoList.clear();
                 DefaultTableModel model23 = (DefaultTableModel) jTable2.getModel();
                 model23.setRowCount(0);
-                new PrioritySched().ejecutar(processes, processInfoList);
-                insertarDatosEnTabla(processInfoList);
+                new PrioritySched().ejecutar(processes);
+                insertarDatosEnTabla(processes);
                 break;
             case 4:
-                processInfoList.clear();
                 DefaultTableModel model24 = (DefaultTableModel) jTable2.getModel();
                 model24.setRowCount(0);
-                new RoundRobin().ejecutar(processes, processInfoList);
-                insertarDatosEnTabla(processInfoList);
+                new RoundRobin().ejecutar(processes);
+                insertarDatosEnTabla(processes);
+                /*for (MenuManager.Process process : processes) {
+                    System.out.println("Proceso " + process.name + ": T.Espera = " + process.waitTime + ", T.Respuesta = " + process.responseTime);
+                }*/
                 break;
             default:
                 System.out.println("Esta opcion no esta contemplada.");
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    public void insertarDatosEnTabla(List<ProcessInfo> procesoInfoList) {
-        for (ProcessInfo procesoInfo : procesoInfoList) {
-            // Insertar procesoInfo en la tabla
+    public void insertarDatosEnTabla(List<Process> processes) {
+        for (Process proceso : processes) {
             DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
-            model.addRow(new Object[]{procesoInfo.name, procesoInfo.waitTime, procesoInfo.responseTime});
+            model.addRow(new Object[]{proceso.name, proceso.waitTime, proceso.responseTime});
         }
     }
-    
+
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextField1ActionPerformed
@@ -389,7 +383,7 @@ public class MenuManager extends javax.swing.JFrame {
 
         //Crear Proceso
         if (value1 != null && value2 != null && value3 != null && value4 != null) {
-            Process newProcess = new Process(value1, Integer.parseInt(value4), Integer.parseInt(value3), Integer.parseInt(value2), value5);
+            Process newProcess = new Process(value1, Integer.parseInt(value4), Integer.parseInt(value3), Integer.parseInt(value2), value5, 0, 0);
             processes.add(newProcess);
             //Agregar dato a la tabla
             DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
@@ -433,8 +427,16 @@ public class MenuManager extends javax.swing.JFrame {
         model.setRowCount(0);
         model2.setRowCount(0);
         processes.clear();
-        processInfoList.clear();
     }//GEN-LAST:event_jButton4ActionPerformed
+
+    private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
+        int index = jComboBox1.getSelectedIndex();
+        if (index == 2 || index == 4) {
+            jButton3.setEnabled(false);
+        } else {
+            jButton3.setEnabled(true);
+        }
+    }//GEN-LAST:event_jComboBox1ActionPerformed
 
     /**
      * @param args the command line arguments

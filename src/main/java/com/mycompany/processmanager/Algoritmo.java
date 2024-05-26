@@ -11,5 +11,5 @@ import java.util.List;
  * @author Amin
  */
 public interface Algoritmo {
-    void ejecutar(List<MenuManager.Process> processes, List<MenuManager.ProcessInfo> processInfoList);
+    void ejecutar(List<MenuManager.Process> processes);
 }

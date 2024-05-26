@@ -34,7 +34,6 @@ public class ganttChart extends ApplicationFrame {
     }
 
     private List<org.jfree.data.gantt.Task> generateTasks(List<MenuManager.Process> processes) {
-        processes.sort(Comparator.comparingInt(p -> p.arrivalTime));
 
         List<org.jfree.data.gantt.Task> tasks = new ArrayList<>();
         int currentTime = 0;
@@ -71,5 +70,5 @@ public class ganttChart extends ApplicationFrame {
                 false
         );
     }
-    
+
 }
